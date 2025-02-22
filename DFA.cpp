@@ -1,54 +1,68 @@
 #include "DFA.h"
 
-State transition(State current, char input) {
-	switch (current) {
-		case START:
-			if (input == 'a') return FOUND_A;
-			break;
-		case FOUND_A:
-			if (input == 'l') return FOUND_L;
-			break;
-		case FOUND_L:
-			if (input == 'e') return FOUND_E;
-			break;
-		case FOUND_E:
-			if (input == 'x') return FOUND_X;
-			break;
-		case FOUND_X:
-			if (input == 'a') return FOUND_A2;
-			break;
-		case FOUND_A2:
-			if (input == 'd') return FOUND_D;
-			break;
-		case FOUND_D:
-			if (input == 'e') return FOUND_E2;
-			break;
-		case FOUND_E2:
-			if (input == 'v') return FOUND_V;
-			break;
-		case FOUND_V:
-			if (input == 'o') return FOUND_O;
-			break;
-		case FOUND_O:
-			if (input == 'r') return FOUND_R;
-			break;
-		case FOUND_R:
-			if (input == 'a') return FOUND_A3;
-			break;
-		case FOUND_ALEXADEVORA:
-			if (input == 'a') return ACCEPT;
-			break;
-		default:
-			return current;
-
-	}
-	return START; //returns to start if there are no valid transitions
+// Constructor: stores the target names and resets the state.
+DFA::DFA(const std::string& first, const std::string& last)
+    : firstName(first), lastName(last) {
+    reset();
 }
 
-bool searchString(const std::string& input) {
-	State currentState = START;
-	for (char c : input) {
+// Reset the DFA to start matching from scratch.
+void DFA::reset() {
+    phase = MATCH_FIRST;
+    idx1 = 0;
+    idx2 = 0;
+}
 
-		//imma work on this later imma play marvel rivals
-	}
+// processChar: updates the DFA's state based on the input character.
+// Arbitrary characters are allowed; the DFA only advances when a match is found.
+void DFA::processChar(char c) {
+    if (phase == MATCH_FIRST) {
+        // If the current character matches the expected character in the first name.
+        if (c == firstName[idx1]) {
+            idx1++; // Advance in firstName
+            // If the entire firstName is matched, switch to matching lastName.
+            if (idx1 == firstName.size()) {
+                phase = MATCH_LAST;
+                idx2 = 0; // Reset last name index
+            }
+        }
+        // If the character matches the first letter of firstName, restart the matching.
+        else if (c == firstName[0]) {
+            idx1 = 1;
+        }
+        // Otherwise, do nothing—since arbitrary characters are allowed.
+    }
+    else if (phase == MATCH_LAST) {
+        // Now matching the last name.
+        if (c == lastName[idx2]) {
+            idx2++; // Advance in lastName
+            // If the entire lastName is matched, move to ACCEPT state.
+            if (idx2 == lastName.size()) {
+                phase = ACCEPT;
+            }
+        }
+        // If the character matches the first letter of lastName, restart last name matching.
+        else if (c == lastName[0]) {
+            idx2 = 1;
+        }
+        // Otherwise, ignore the character.
+    }
+}
+
+// isAccepted: returns true if both names have been matched.
+bool DFA::isAccepted() const {
+    return phase == ACCEPT;
+}
+
+// searchString: uses the DFA to process an entire input string.
+// Returns true if the target pattern (first name followed by last name) is found.
+bool searchString(const std::string& input, const std::string& first, const std::string& last) {
+    DFA dfa(first, last);
+    for (char c : input) {
+        dfa.processChar(c);
+        if (dfa.isAccepted()) {
+            return true;
+        }
+    }
+    return dfa.isAccepted();
 }
