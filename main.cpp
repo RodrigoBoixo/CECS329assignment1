@@ -35,7 +35,7 @@ int main()
 
 int stateTransition(int currentState, char inputChar)
 {
-    const string target = "gracehopper";
+    const string target = "alexadevora";
 
     if (inputChar == target[currentState]) {
         return currentState + 1;  
